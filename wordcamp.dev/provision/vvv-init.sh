@@ -9,29 +9,34 @@ WPCLI_THEMES="twentyten twentyeleven twentytwelve twentythirteen"
 
 source $BASE_DIR/helper-functions.sh
 wme_create_logs "$BASE_DIR/$SITE_DOMAIN/logs"
+wme_svn_git_migration
 
-if [ ! -d $SITE_DIR ]; then
+if [ ! -L $SITE_DIR ]; then
 	printf "\n#\n# Provisioning $SITE_DOMAIN\n#\n"
 
-	wme_import_database "wordcamp_dev" $PROVISION_DIR
+	# Don't overwrite existing databases if we're just migrating from SVN to Git
+	if [[ ! $MIGRATED_TO_GIT ]]; then
+		wme_import_database "wordcamp_dev" $PROVISION_DIR
+	fi
+
+	wme_clone_meta_repository $BASE_DIR
+	wme_symlink_content_dir $BASE_DIR $SITE_DIR "wordcamp.org"
 
 	# Setup WordPress
-	mkdir $SITE_DIR
 	wp core download --path=$SITE_DIR/wordpress --allow-root
 	cp $PROVISION_DIR/wp-config.php $SITE_DIR
 
-	# Check out WordCamp.org source code
-	svn co https://meta.svn.wordpress.org/sites/trunk/wordcamp.org/public_html/wp-content/ $SITE_DIR/wp-content
-
+	# todo do svn checkouts? maybe create helper function too?
 	for i in "${SVN_PLUGINS[@]}"
 	do :
 		echo "$i https://plugins.svn.wordpress.org/$i/trunk" >> $PROVISION_DIR/svn-externals.tmp
 	done
 
-	svn propset svn:externals -F $PROVISION_DIR/svn-externals.tmp $SITE_DIR/wp-content/plugins
-	svn up $SITE_DIR/wp-content/plugins
+	#todo svn propset svn:externals -F $PROVISION_DIR/svn-externals.tmp $SITE_DIR/wp-content/plugins
+	#svn up $SITE_DIR/wp-content/plugins
 	rm -f $PROVISION_DIR/svn-externals.tmp
 
+	# todo submodule? probably not
 	git clone https://github.com/Automattic/camptix.git $SITE_DIR/wp-content/plugins/camptix
 
 	# Setup mu-plugin for local development
@@ -44,11 +49,15 @@ if [ ! -d $SITE_DIR ]; then
 else
 	printf "\n#\n# Updating $SITE_DOMAIN\n#\n"
 
-	svn up $SITE_DIR/wp-content
+	git -C $SITE_DIR fetch origin master:master
+
+	# todo setup array / loop for these? helper function?
 	svn up $SITE_DIR/wp-content/plugins/camptix-network-tools
 	svn up $SITE_DIR/wp-content/plugins/email-post-changes
 	svn up $SITE_DIR/wp-content/plugins/tagregator
+
 	git -C $SITE_DIR/wp-content/plugins/camptix pull origin master
+
 	wp core   update                --path=$SITE_DIR/wordpress --allow-root
 	wp plugin update $WPCLI_PLUGINS --path=$SITE_DIR/wordpress --allow-root
 	wp theme  update $WPCLI_THEMES  --path=$SITE_DIR/wordpress --allow-root
