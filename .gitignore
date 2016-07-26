@@ -1,3 +1,6 @@
-*/logs
-*/public_html
-meta-repository
+/*/logs
+/*/public_html
+/*/public_html-old-svn-backup
+/meta-repository
+
+!/wp-meta.dev/public_html

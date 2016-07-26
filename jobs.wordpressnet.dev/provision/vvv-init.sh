@@ -38,7 +38,7 @@ if [ ! -L $SITE_DIR ]; then
 else
 	printf "\n#\n# Updating $SITE_DOMAIN\n#\n"
 
-	git -C $SITE_DIR fetch origin master:master
+	git -C $SITE_DIR pull origin master
 	wp core   update --version=nightly --path=$SITE_DIR/wordpress --allow-root
 	wp plugin update --all --path=$SITE_DIR/wordpress --allow-root
 

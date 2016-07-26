@@ -53,16 +53,14 @@ if [ ! -L $SITE_DIR ]; then
 else
 	printf "\n#\n# Updating $SITE_DOMAIN\n#\n"
 
-	git -C $SITE_DIR fetch origin master:master
-	# todo fatal: Refusing to fetch into current branch refs/heads/master of non-bare repository
-	# appropriate to use `--update-head-ok`, or maybe misunderstanding the whole thing?
+	git -C $SITE_DIR pull origin master
 
 	for i in "${SVN_PLUGINS[@]}"
 	do :
 		svn up $SITE_DIR/wp-content/plugins/$i
 	done
 
-	git -C $SITE_DIR/wp-content/plugins/camptix fetch origin master:master
+	git -C $SITE_DIR/wp-content/plugins/camptix pull origin master
 
 	wp core   update                     --path=$SITE_DIR/wordpress --allow-root
 	wp plugin update ${WPCLI_PLUGINS[@]} --path=$SITE_DIR/wordpress --allow-root
