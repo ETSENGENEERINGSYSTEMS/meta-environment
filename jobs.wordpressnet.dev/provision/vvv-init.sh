@@ -6,7 +6,7 @@ SITE_DIR="$BASE_DIR/$SITE_DOMAIN/public_html"
 
 source $BASE_DIR/helper-functions.sh
 wme_create_logs "$BASE_DIR/$SITE_DOMAIN/logs"
-wme_svn_git_migration
+wme_svn_git_migration $SITE_DIR
 
 if [ ! -L $SITE_DIR ]; then
 	printf "\n#\n# Provisioning $SITE_DOMAIN\n#\n"
@@ -17,7 +17,7 @@ if [ ! -L $SITE_DIR ]; then
 	fi
 
 	wme_clone_meta_repository $BASE_DIR
-	wme_symlink_content_dir $BASE_DIR $SITE_DIR "jobs.wordpress.net"
+	wme_symlink_public_dir $BASE_DIR $SITE_DOMAIN "jobs.wordpress.net"
 
 	# Setup WordPress and plugins
 	wp core download --version=nightly --path=$SITE_DIR/wordpress
@@ -25,6 +25,15 @@ if [ ! -L $SITE_DIR ]; then
 	cp $PROVISION_DIR/wp-config.php             $SITE_DIR
 	cp $PROVISION_DIR/sandbox-functionality.php $SITE_DIR/wp-content/mu-plugins/
 	wp plugin install si-contact-form --path=$SITE_DIR/wordpress --allow-root
+
+	# Ignore external dependencies and Meta Environment tweaks
+	IGNORED_FILES=(
+		/wordpress
+		/wp-content/mu-plugins/sandbox-functionality.php
+		/wp-content/plugins/si-contact-form
+		/wp-config.php
+	)
+	wme_create_gitignore $SITE_DIR
 
 else
 	printf "\n#\n# Updating $SITE_DOMAIN\n#\n"

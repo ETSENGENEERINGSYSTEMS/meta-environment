@@ -7,7 +7,7 @@
 #
 # $1 - the base folder
 function wme_clone_meta_repository {
-	REPOSITORY_DIR="$1/meta-repository"
+	local REPOSITORY_DIR="$1/meta-repository"
 
 	if [ -d $REPOSITORY_DIR ]; then
 		return 0
@@ -17,22 +17,28 @@ function wme_clone_meta_repository {
 	git -C $REPOSITORY_DIR config diff.noprefix true
 }
 
-# todo explain
+# Symlink each site's public_html folder to the corresponding Meta repository
 #
-# $1 - the base directory
-# $2 - the site's public_html directory
-# $3 - the name of the site's folder in the Meta repository
-function wme_symlink_content_dir {
-	mkdir -p $2
-	cd $2
-	ln -rs "$1/meta-repository/$3/public_html/wp-content/" wp-content
+# The Git mirror of the Meta repository has all sites in a single repo, just like the SVN repo. Git doesn't support
+# cloning a sub-tree of a repository, though. The best solution is to just have a single copy of the entire repo,
+# and then symlink each site's public_html folder.
+#
+# $1 - the site's root directory
+# $1 - the name of the site's folder in the Meta Environment
+# $2 - the name of the site's folder in the Meta repository
+function wme_symlink_public_dir {
+	cd "$1/$2"
+	ln -rs "$1/meta-repository/$3/public_html/" public_html
 }
 
 # Add entries to a .gitignore file
 #
 # $1 - the site's web root
 function wme_create_gitignore {
-	for i in "${GIT_IGNORE[@]}"
+	# Ignore the .gitignore file itself
+	echo "/.gitignore" >> $1/.gitignore
+
+	for i in "${IGNORED_FILES[@]}"
 	do :
 		echo "$i" >> $1/.gitignore
 	done
@@ -94,16 +100,18 @@ function wme_import_database {
 # Warn users that we moved their cheese during the upgrade from SVN to Git
 #
 # See https://github.com/WordPress/meta-environment/issues/13
+#
+# $1 - the path to the site's public_html folder
 function wme_svn_git_migration {
-	if [[ ! -e $SITE_DIR || -L $SITE_DIR ]]; then
+	if [[ ! -e $1 || -L $1 ]]; then
 		return 0
 	fi
 
-	echo -e "\nWARNING: The Meta Environment now uses Git rather than Subversion for the Meta repository.\n"
-	echo "Your current public_html folder will be backed up to public_html-old-svn-backup, and a new public_html folder will be provisioned with Git."
+	echo -e "\nWARNING: The Meta Environment now uses Git to track files in the Meta sites.\n"
+	echo "Your current public_html folder will be backed up to public_html-old-svn-backup, and a new Git-based public_html folder will be provisioned."
 	echo "If you're working on any unfinished patches, please copy them from the backup folder."
 	echo "For help contributing with Git, see https://make.wordpress.org/meta/handbook/documentation/contributing-with-git/"
 
-	mv $SITE_DIR "$SITE_DIR-old-svn-backup"
+	mv $1 "$1-old-svn-backup"
 	MIGRATED_TO_GIT=true
 }
