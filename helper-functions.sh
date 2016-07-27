@@ -107,10 +107,10 @@ function wme_svn_git_migration {
 		return 0
 	fi
 
-	echo -e "\nWARNING: The Meta Environment now uses Git to track files in the Meta sites.\n"
+	echo -e "\n\nWARNING: The Meta Environment now uses Git to track files in the Meta sites.\n"
 	echo "Your current public_html folder will be backed up to public_html-old-svn-backup, and a new Git-based public_html folder will be provisioned."
 	echo "If you're working on any unfinished patches, please copy them from the backup folder."
-	echo "For help contributing with Git, see https://make.wordpress.org/meta/handbook/documentation/contributing-with-git/"
+	echo -e "For help contributing with Git, see https://make.wordpress.org/meta/handbook/documentation/contributing-with-git/\n"
 
 	mv $1 "$1-old-svn-backup"
 	MIGRATED_TO_GIT=true
