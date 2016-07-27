@@ -87,7 +87,7 @@ else
 	printf "\n#\n# Updating $SITE_DOMAIN\n#\n"
 
 	git -C $SITE_DIR pull origin master
-	wp core   update --version=nightly --path=$SITE_DIR/wordpress --allow-root
+	wp core   update --version=nightly   --path=$SITE_DIR/wordpress --allow-root
 	wp plugin update ${WPCLI_PLUGINS[@]} --path=$SITE_DIR/wordpress --allow-root
 	svn up $SITE_DIR/wp-content/themes/p2
 

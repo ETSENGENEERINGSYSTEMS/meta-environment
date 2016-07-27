@@ -41,6 +41,6 @@ else
 
 	git -C $SITE_DIR pull origin master
 	wp core   update --version=nightly --path=$SITE_DIR/wordpress --allow-root
-	wp plugin update --all --path=$SITE_DIR/wordpress --allow-root
+	wp plugin update --all             --path=$SITE_DIR/wordpress --allow-root
 
 fi
